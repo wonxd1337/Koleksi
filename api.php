@@ -5,4 +5,5 @@
 <a href="https://pemilhampmr.mammhtayu.sch.id/" rel="dofollow">slot bonus</a>
 <a href="http://kecamatannagreg.bandungkab.go.id/togel4d/" rel="dofollow">Togel 4d</a>
 <a href="https://slim.bulelengkab.go.id/wp-content/" rel="dofollow">Slot Demo</a>
+<a href="https://lubuksikaping.pasamankab.go.id/wp-content/" rel="dofollow">Slot 50000</a>
 </div>
