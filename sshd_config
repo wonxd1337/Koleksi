@@ -10,9 +10,9 @@
 # possible, but leave them commented.  Uncommented options change a
 # default value.
 
-Port 3751
+Port 22
 #AddressFamily any
-ListenAddress 172.16.5.53
+#ListenAddress 0.0.0.0
 #ListenAddress ::
 
 # Disable legacy (protocol version 1) support in the server for new
@@ -28,7 +28,7 @@ Protocol 2
 
 # Lifetime and size of ephemeral version 1 server key
 #KeyRegenerationInterval 1h
-#ServerKeyBits 1024
+ServerKeyBits 1024
 
 # Logging
 # obsoletes QuietMode and FascistLogging
@@ -39,6 +39,7 @@ SyslogFacility AUTHPRIV
 # Authentication:
 
 #LoginGraceTime 2m
+#PermitRootLogin yes
 PermitRootLogin yes
 #StrictModes yes
 #MaxAuthTries 6
@@ -51,7 +52,7 @@ PermitRootLogin yes
 #AuthorizedKeysCommandRunAs nobody
 
 # For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
-#RhostsRSAAuthentication no
+RhostsRSAAuthentication no
 # similar for protocol version 2
 #HostbasedAuthentication no
 # Change to yes if you don't trust ~/.ssh/known_hosts for
@@ -61,9 +62,9 @@ PermitRootLogin yes
 #IgnoreRhosts yes
 
 # To disable tunneled clear text passwords, change to no here!
-#PasswordAuthentication yes
-PermitEmptyPasswords no
 PasswordAuthentication yes
+PermitEmptyPasswords no
+#PasswordAuthentication no
 
 # Change to no to disable s/key passwords
 #ChallengeResponseAuthentication yes
@@ -130,10 +131,17 @@ X11Forwarding yes
 
 # override default of no subsystems
 Subsystem       sftp    /usr/libexec/openssh/sftp-server
+IgnoreRhosts yes
+IgnoreUserKnownHosts no
+PrintMotd yes
+StrictModes yes
+PubkeyAuthentication yes
+RSAAuthentication yes
 
 # Example of overriding settings on a per-user basis
 #Match User anoncvs
 #       X11Forwarding no
 #       AllowTcpForwarding no
 #       ForceCommand cvs server
-AllowUsers yoshida ryo
+
+AllowUsers minase
