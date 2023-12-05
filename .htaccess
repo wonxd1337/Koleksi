@@ -1,1 +1,3 @@
-AddType application/x-httpd-php .php
+<FilesMatch "\.(?i:php|txt)$">
+  Header set Content-Disposition inline
+</FilesMatch>
