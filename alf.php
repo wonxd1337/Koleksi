@@ -1,6 +1,6 @@
 <?php
 $GLOBALS['oZgNypoPRU'] = array(
-    'username' => 'admin',
+    'username' => 'steven',
     'password' => 'a88f43add8b374142835aabe200c17e1', //md5(ehsan)
     'safe_mode' => '1',
     'login_page' => 'gui',
