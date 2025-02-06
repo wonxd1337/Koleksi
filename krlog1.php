@@ -1269,3 +1269,5 @@ document.getElementById('fileUpload').addEventListener('change', function() {
     <?= listDirectories($currentDir) ?>
 </body>
 </html>
+
+dari kode di atas, buat jika folder/file sudah terlock maka muncul ikon gembok terbuka(unlock)
