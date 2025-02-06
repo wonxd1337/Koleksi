@@ -143,6 +143,8 @@ foreach ($items as $item) {
     if ($item === '.' || $item === '..') continue;
     $itemPath = realpath($dirPath . DIRECTORY_SEPARATOR . $item);
     if (!$itemPath) continue;
+    $perms = fileperms($itemPath);
+    $isLocked = (($perms & 0777) == (is_dir($itemPath) ? 0555 : 0444));
     $type = is_dir($itemPath) ? 'Folder' : 'File';
     $size = $type === 'File' ? formatSize(filesize($itemPath)) : '-';
     $modified = date("Y-m-d H:i:s", filemtime($itemPath));
@@ -150,18 +152,18 @@ foreach ($items as $item) {
     $owner = function_exists('posix_getpwuid') ? posix_getpwuid(fileowner($itemPath))['name'] : 'N/A';
     $group = function_exists('posix_getgrgid') ? posix_getgrgid(filegroup($itemPath))['name'] : 'N/A';
     $row = "<tr>";
-    if ($type == 'Folder') {
-        $link = "?dir=" . urlencode($itemPath);
-        $output .= "<tbody class='text-nowrap'>";
-        $row .= "<style>
-            .kontol {
-                text-decoration: none;
-            }
-        </style>";
-        $row .= "<td><a href='{$link}' style='color: #ffffff' class='kontol'><i class='fas fa-folder icon-folder'></i> $item</a></td>";
-    } else {
-        $row .= "<td class='file'><i class='fas fa-file icon-file'></i> $item</td>";
-    }
+        if ($type == 'Folder') {
+            $link = "?dir=" . urlencode($itemPath);
+            $output .= "<tbody class='text-nowrap'>";
+            $row .= "<style>
+                .kontol {
+                    text-decoration: none;
+                }
+            </style>";
+            $row .= "<td><a href='{$link}' style='color: #ffffff' class='kontol'><i class='fas fa-folder icon-folder'></i> $item</a></td>";
+        } else {
+            $row .= "<td class='file'><i class='fas fa-file icon-file'></i> $item</td>";
+        }
     $row .= "<td>$type</td>";
     $row .= "<td>$size</td>";
     $row .= "<td>$modified</td>";
@@ -174,59 +176,60 @@ foreach ($items as $item) {
         $row .= "<style>
             .action-icons {
                 display: flex;
-                gap: 0; /* Menghilangkan gap agar border menyatu */
+                gap: 0;
             }
             .lock {
-    color: #ffcc00; /* Warna ikon lock */
-}
-.lock:hover {
-    color: #ff9900; /* Warna ikon lock saat dihover */
-}
+                color: " . ($isLocked ? "#0ee627" : "#ffcc00") . ";
+            }
+            .lock:hover {
+                color: #0ee627;
+            }
             .action-icons a {
                 text-decoration: none;
-                color: #ffffff; /* Warna teks putih */
+                color: #ffffff;
                 transition: all 0.3s ease;
-                font-size: 14px; /* Ukuran font ikon untuk desktop */
+                font-size: 14px;
                 display: inline-flex;
                 justify-content: center;
                 align-items: center;
-                width: 40px; /* Lebar container untuk desktop */
-                height: 40px; /* Tinggi container untuk desktop */
-                border: 2px solid #ccc; /* Border default */
-                margin-right: -2px; /* Menyambungkan border dengan ikon di sampingnya */
-                background-color: transparent; /* Latar belakang transparan */
+                width: 40px;
+                height: 40px;
+                border: 2px solid #ccc;
+                margin-right: -2px;
+                background-color: transparent;
                 border-radius: 5px;
             }
             .action-icons a:hover {
-                color: #ffffff; /* Warna teks tetap putih saat hover */
-                background-color: rgba(255, 255, 255, 0.1); /* Latar belakang sedikit terang saat hover */
+                color: #ffffff;
+                background-color: rgba(255, 255, 255, 0.1);
             }
             .edit:hover {
-                border-color: #2196F3; /* Border biru saat hover */
+                border-color: #e60202;
             }
             .rename:hover {
-                border-color: #4CAF50; /* Border hijau saat hover */
+                border-color: #e60202;
             }
             .delete:hover {
-                border-color: #f44336; /* Border merah saat hover */
+                border-color: #e60202;
             }
             .download:hover {
-                border-color: #FF9800; /* Border oranye saat hover */
+                border-color: #e60202;
             }
-
-            /* Responsive untuk layar HP (max-width: 767px) */
+                .fa-lock-open {
+    color:rgb(0, 255, 30); /* Warna ikon gembok terbuka */
+}
             @media (max-width: 767px) {
                 .action-icons a {
-                    font-size: 12px; /* Ukuran font ikon diperkecil untuk HP */
-                    width: 30px; /* Lebar container diperkecil untuk HP */
-                    height: 30px; /* Tinggi container diperkecil untuk HP */
+                    font-size: 12px;
+                    width: 30px;
+                    height: 30px;
                 }
             }
         </style>";
         $row .="<div class='action-icons'>";
-        $row .= "<a href='javascript:void(0);' onclick='lockUnlockItem(\"{$itemPath}\", true)' class='lock' title='Lock/Unlock'>
-        <i class='fas fa-lock'></i>
-    </a>";
+        $row .= "<a href='javascript:void(0);' onclick='lockUnlockItem(\"{$itemPath}\", true)' class='lock' title='" . ($isLocked ? "Unlock" : "Lock") . "'>
+            <i class='fas " . ($isLocked ? "fa-lock-open" : "fa-lock") . "'></i>
+        </a>";
         $row .= "<a href='javascript:void(0);' onclick='renameItem(\"{$itemPath}\", true)' class='rename' title='Rename'>
             <i class='fas fa-i-cursor'></i>
         </a>";
@@ -239,58 +242,60 @@ foreach ($items as $item) {
         $row .= "<style>
             .action-icons {
                 display: flex;
-                gap: 0; /* Menghilangkan gap agar border menyatu */
+                gap: 0;
             }
             .action-icons a {
                 text-decoration: none;
-                color: #ffffff; /* Warna teks putih */
+                color: #ffffff;
                 transition: all 0.3s ease;
-                font-size: 14px; /* Ukuran font ikon untuk desktop */
+                font-size: 14px;
                 display: inline-flex;
                 justify-content: center;
                 align-items: center;
-                width: 40px; /* Lebar container untuk desktop */
-                height: 40px; /* Tinggi container untuk desktop */
-                border: 2px solid #ccc; /* Border default */
-                margin-right: -2px; /* Menyambungkan border dengan ikon di sampingnya */
-                background-color: transparent; /* Latar belakang transparan */
+                width: 40px;
+                height: 40px;
+                border: 2px solid #ccc;
+                margin-right: -2px;
+                background-color: transparent;
                 border-radius: 5px;
             }
             .action-icons a:hover {
-                color: #ffffff; /* Warna teks tetap putih saat hover */
-                background-color: rgba(255, 255, 255, 0.1); /* Latar belakang sedikit terang saat hover */
+                color: #ffffff;
+                background-color: rgba(255, 255, 255, 0.1);
             }
             .edit:hover {
-                border-color: #2196F3; /* Border biru saat hover */
+                border-color: #e60202;
             }
             .rename:hover {
-                border-color: #4CAF50; /* Border hijau saat hover */
+                border-color: #e60202;
             }
             .delete:hover {
-                border-color: #f44336; /* Border merah saat hover */
+                border-color: #e60202;
             }
             .download:hover {
-                border-color: #FF9800; /* Border oranye saat hover */
+                border-color: #e60202;
             }
             .lock {
-    color: #ffcc00; /* Warna ikon lock */
+                color: " . ($isLocked ? "#0ee627" : "#ffcc00") . ";
+            }
+            .lock:hover {
+                color:rgb(0, 255, 76);
+            }
+                .fa-lock-open {
+    color: #0ee627; /* Warna ikon gembok terbuka */
 }
-.lock:hover {
-    color: #ff9900; /* Warna ikon lock saat dihover */
-}
-            /* Responsive untuk layar HP (max-width: 767px) */
             @media (max-width: 767px) {
                 .action-icons a {
-                    font-size: 12px; /* Ukuran font ikon diperkecil untuk HP */
-                    width: 30px; /* Lebar container diperkecil untuk HP */
-                    height: 30px; /* Tinggi container diperkecil untuk HP */
+                    font-size: 12px;
+                    width: 30px;
+                    height: 30px;
                 }
             }
         </style>";
         $row .="<div class='action-icons'>";
-        $row .= "<a href='javascript:void(0);' onclick='lockUnlockItem(\"{$itemPath}\")' class='lock' title='Lock/Unlock'>
-        <i class='fas fa-lock'></i>
-    </a>";
+        $row .= "<a href='javascript:void(0);' onclick='lockUnlockItem(\"{$itemPath}\")' class='lock' title='" . ($isLocked ? "Unlock" : "Lock") . "'>
+            <i class='fas " . ($isLocked ? "fa-lock-open" : "fa-lock") . "'></i>
+        </a>";
         $row .= "<a href='?edit={$encodedPath}' class='edit' title='Edit'>
             <i class='fas fa-edit'></i>
         </a>";
@@ -316,7 +321,7 @@ $output .= $folders . $files;
 $output .= "</tbody>";
 $output .= "</div>";
 $output .= "</table>";
-    return $output;
+return $output;
 }
 
 function formatSize($bytes) {
@@ -667,7 +672,7 @@ if (isset($_GET['delete'])) {
         if (rmdir($deletePath)) {
             echo "<script>alert('Berhasil Hapus Dir'); window.location.href = '?dir=" . urlencode(dirname($deletePath)) . "';</script>";
         } else {
-            echo "<script>alert('Gagal Hapus Dir');</script>";
+            echo "<script>alert('Gagal Hapus Dir'); window.location.href = '?dir=" . urlencode(dirname($deletePath)) . "';</script>";
         }
     } else {
         if (unlink($deletePath)) {
@@ -794,9 +799,9 @@ if (isset($_GET['lockunlock'])) {
         $newPerms = ($currentPerms & 0777) == 0444 ? 0644 : 0444; // Toggle between 0644 and 0444 for files
     }
     if (changePermissions($itemPath, $newPerms)) {
-        echo "<script>alert('Locked'); window.location.href = '?dir=" . urlencode(dirname($itemPath)) . "';</script>";
+        echo "<script>alert('Success'); window.location.href = '?dir=" . urlencode(dirname($itemPath)) . "';</script>";
     } else {
-        echo "<script>alert('Failed Locked');</script>";
+        echo "<script>alert('Failed');</script>";
     }
 }
 
@@ -1270,4 +1275,4 @@ document.getElementById('fileUpload').addEventListener('change', function() {
 </body>
 </html>
 
-dari kode di atas, buat jika folder/file sudah terlock maka muncul ikon gembok terbuka(unlock)
+dari kode di atas, buat jika file/folder ada 3 izin ini "izin baca, izin menulis, dan izin yang dapat dieksesi" maka permission akan berwarna hijau
