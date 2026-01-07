@@ -1,0 +1,436 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Player dan Character
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local Humanoid = character:WaitForChild("Humanoid")
+
+-- Variabel GUI
+local guiEnabled = true
+local isMinimized = false
+local isDragging = false
+local dragStartPos, guiStartPos
+local screenGui, mainFrame, statusLabel, seatCountLabel, sitButton
+
+function findEmptySeats()
+    local Seats = {}
+    for _, child in ipairs(workspace:GetDescendants()) do
+        if child:IsA("VehicleSeat") and not child.Occupant then
+            table.insert(Seats, child)
+        end
+    end
+    return Seats
+end
+
+function sitRandomSeat()
+    local Seats = findEmptySeats()
+    
+    if #Seats > 0 then
+
+        local randomSeat = Seats[math.random(1, #Seats)]
+        
+        local originalSize = sitButton.Size
+        
+        local pressTween = TweenService:Create(
+            sitButton,
+            TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Size = originalSize - UDim2.new(0, 10, 0, 5)}
+        )
+        
+        local releaseTween = TweenService:Create(
+            sitButton,
+            TweenInfo.new(0.1, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+            {Size = originalSize}
+        )
+        
+        pressTween:Play()
+        task.wait(0.1)
+        releaseTween:Play()
+        
+        task.wait(0.2)
+        
+        local success = pcall(function()
+            randomSeat:Sit(Humanoid)
+        end)
+        
+        if success then
+
+            statusLabel.Text = "Sit"
+            seatCountLabel.Text = "Detected Seat: " .. tostring(#Seats - 1)
+            
+            local originalTextColor = statusLabel.TextColor3
+            
+            local colorTween = TweenService:Create(
+                statusLabel,
+                TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {TextColor3 = Color3.fromRGB(0, 200, 0)}
+            )
+            
+            colorTween:Play()
+            task.wait(1)
+            
+            local revertTween = TweenService:Create(
+                statusLabel,
+                TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {TextColor3 = originalTextColor}
+            )
+            
+            revertTween:Play()
+        else
+            warn("Gagal duduk di kursi")
+            statusLabel.Text = "Status: Gagal duduk"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+        end
+    else
+        warn("Tidak ada kursi kosong yang ditemukan")
+        statusLabel.Text = "Status: Tidak ada kursi kosong"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        seatCountLabel.Text = "Seat Not Detected"
+    end
+end
+
+-- Fungsi untuk membuat GUI
+function createGUI()
+    -- Buat ScreenGui
+    screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "VehicleSeatRandomizerGUI"
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.ResetOnSpawn = false
+    
+    -- Frame utama - SESUAIKAN UKURAN
+    mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 320, 0, 180)  -- Diperkecil agar sesuai dengan konten
+    mainFrame.Position = UDim2.new(0.5, -160, 0.5, -90)
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.ClipsDescendants = true
+    
+    -- Efek sudut membulat
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = mainFrame
+    
+    -- Efek shadow
+    local shadow = Instance.new("UIStroke")
+    shadow.Color = Color3.fromRGB(60, 60, 80)
+    shadow.Thickness = 2
+    shadow.Parent = mainFrame
+    
+    -- Gradient background
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 45)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 35))
+    })
+    gradient.Rotation = 45
+    gradient.Parent = mainFrame
+    
+    -- Title bar untuk drag dan minimize
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    titleBar.BorderSizePixel = 0
+    
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 12)
+    titleCorner.Parent = titleBar
+    
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "TitleLabel"
+    titleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "Tew1337"
+    titleLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
+    titleLabel.TextSize = 16
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    -- Tombol minimize
+    local minimizeButton = Instance.new("TextButton")
+    minimizeButton.Name = "MinimizeButton"
+    minimizeButton.Size = UDim2.new(0, 30, 0, 30)
+    minimizeButton.Position = UDim2.new(1, -70, 0, 0)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+    minimizeButton.BorderSizePixel = 0
+    minimizeButton.Text = "_"
+    minimizeButton.TextColor3 = Color3.fromRGB(220, 220, 255)
+    minimizeButton.TextSize = 18
+    minimizeButton.Font = Enum.Font.GothamBold
+    
+    local minimizeCorner = Instance.new("UICorner")
+    minimizeCorner.CornerRadius = UDim.new(0, 8)
+    minimizeCorner.Parent = minimizeButton
+    
+    -- Tombol close
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Size = UDim2.new(0, 30, 0, 30)
+    closeButton.Position = UDim2.new(1, -35, 0, 0)
+    closeButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+    closeButton.BorderSizePixel = 0
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.TextSize = 14
+    closeButton.Font = Enum.Font.GothamBold
+    
+    local closeCorner = Instance.new("UICorner")
+    closeCorner.CornerRadius = UDim.new(0, 8)
+    closeCorner.Parent = closeButton
+    
+    -- Konten utama
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Name = "ContentFrame"
+    contentFrame.Size = UDim2.new(1, -20, 1, -40)  -- Diperbaiki ukurannya
+    contentFrame.Position = UDim2.new(0, 10, 0, 40)
+    contentFrame.BackgroundTransparency = 1
+    
+    -- Label status
+    statusLabel = Instance.new("TextLabel")  -- Tetap ada untuk fungsi sitRandomSeat
+    statusLabel.Name = "StatusLabel"
+    statusLabel.Size = UDim2.new(1, 0, 0, 30)
+    statusLabel.Position = UDim2.new(0, 0, 0, 0)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.Text = ""
+    statusLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
+    statusLabel.TextSize = 14
+    statusLabel.Font = Enum.Font.GothamBold
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+    statusLabel.Visible = false  -- Tetap dibuat tapi tidak terlihat
+    
+    -- Label jumlah kursi
+    seatCountLabel = Instance.new("TextLabel")
+    seatCountLabel.Name = "SeatCountLabel"
+    seatCountLabel.Size = UDim2.new(1, 0, 0, 35)
+    seatCountLabel.Position = UDim2.new(0, 0, 0, 10)
+    seatCountLabel.BackgroundTransparency = 1
+    seatCountLabel.Text = "Detected Seat: 0"
+    seatCountLabel.TextColor3 = Color3.fromRGB(180, 180, 230)
+    seatCountLabel.TextSize = 16  -- Sedikit lebih besar
+    seatCountLabel.Font = Enum.Font.GothamBold
+    seatCountLabel.TextXAlignment = Enum.TextXAlignment.Center
+    
+    -- Tombol duduk - SESUAIKAN UKURAN
+    sitButton = Instance.new("TextButton")
+    sitButton.Name = "SitButton"
+    sitButton.Size = UDim2.new(0.9, 0, 0, 60)  -- Lebih tinggi untuk tampilan yang lebih baik
+    sitButton.Position = UDim2.new(0.05, 0, 0, 55)
+    sitButton.BackgroundColor3 = Color3.fromRGB(70, 120, 220)
+    sitButton.BorderSizePixel = 0
+    sitButton.Text = "MALINGG"
+    sitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sitButton.TextSize = 20  -- Lebih besar
+    sitButton.Font = Enum.Font.GothamBold
+    
+    local sitButtonCorner = Instance.new("UICorner")
+    sitButtonCorner.CornerRadius = UDim.new(0, 12)
+    sitButtonCorner.Parent = sitButton
+    
+    local sitButtonStroke = Instance.new("UIStroke")
+    sitButtonStroke.Color = Color3.fromRGB(100, 150, 255)
+    sitButtonStroke.Thickness = 2
+    sitButtonStroke.Parent = sitButton
+    
+    -- Hubungkan semua bagian
+    titleBar.Parent = mainFrame
+    titleLabel.Parent = titleBar
+    minimizeButton.Parent = titleBar
+    closeButton.Parent = titleBar
+    
+    contentFrame.Parent = mainFrame
+    statusLabel.Parent = contentFrame
+    seatCountLabel.Parent = contentFrame
+    sitButton.Parent = contentFrame
+    
+    mainFrame.Parent = screenGui
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+    
+    -- Animasi masuk - SESUAIKAN UKURAN ANIMASI
+    mainFrame.Size = UDim2.new(0, 10, 0, 10)
+    mainFrame.Position = UDim2.new(0.5, -5, 0.5, -5)
+    
+    local openTween = TweenService:Create(
+        mainFrame,
+        TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        {Size = UDim2.new(0, 320, 0, 180), Position = UDim2.new(0.5, -160, 0.5, -90)}
+    )
+    
+    openTween:Play()
+    
+    -- Update jumlah kursi saat pertama kali
+    task.wait(0.6) -- Tunggu animasi selesai
+    local seats = findEmptySeats()
+    seatCountLabel.Text = "Detected Seat: " .. tostring(#seats)
+    
+    -- Fungsi untuk drag GUI
+    local function startDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = true
+            dragStartPos = Vector2.new(input.Position.X, input.Position.Y)
+            guiStartPos = Vector2.new(mainFrame.Position.X.Scale, mainFrame.Position.Y.Scale)
+            
+            -- Animasi saat mulai drag
+            local dragTween = TweenService:Create(
+                mainFrame,
+                TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {BackgroundColor3 = Color3.fromRGB(40, 40, 55)}
+            )
+            dragTween:Play()
+        end
+    end
+    
+    local function endDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = false
+            
+            -- Animasi saat berhenti drag
+            local endDragTween = TweenService:Create(
+                mainFrame,
+                TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {BackgroundColor3 = Color3.fromRGB(30, 30, 40)}
+            )
+            endDragTween:Play()
+        end
+    end
+    
+    local function updateDrag(input)
+        if isDragging then
+            local delta = Vector2.new(
+                input.Position.X - dragStartPos.X,
+                input.Position.Y - dragStartPos.Y
+            )
+            
+            local newX = guiStartPos.X + (delta.X / screenGui.AbsoluteSize.X)
+            local newY = guiStartPos.Y + (delta.Y / screenGui.AbsoluteSize.Y)
+            
+            -- Batasi agar GUI tidak keluar dari layar
+            newX = math.clamp(newX, 0, 1)
+            newY = math.clamp(newY, 0, 1)
+            
+            mainFrame.Position = UDim2.new(newX, mainFrame.Position.X.Offset, newY, mainFrame.Position.Y.Offset)
+        end
+    end
+    
+    -- Hubungkan fungsi drag
+    titleBar.InputBegan:Connect(startDrag)
+    titleBar.InputEnded:Connect(endDrag)
+    UserInputService.InputChanged:Connect(updateDrag)
+    
+    -- Fungsi minimize/maximize - SESUAIKAN UKURAN MINIMIZE
+    minimizeButton.MouseButton1Click:Connect(function()
+        isMinimized = not isMinimized
+        
+        if isMinimized then
+            -- Animasi minimize
+            local minimizeTween = TweenService:Create(
+                mainFrame,
+                TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+                {Size = UDim2.new(0, 320, 0, 30)}
+            )
+            minimizeTween:Play()
+            
+            minimizeButton.Text = "+"
+            contentFrame.Visible = false
+        else
+            -- Animasi maximize
+            local maximizeTween = TweenService:Create(
+                mainFrame,
+                TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                {Size = UDim2.new(0, 320, 0, 180)}
+            )
+            maximizeTween:Play()
+            
+            minimizeButton.Text = "_"
+            
+            -- Tunggu sebentar sebelum menampilkan konten
+            task.wait(0.15)
+            contentFrame.Visible = true
+        end
+    end)
+    
+    -- Fungsi close
+    closeButton.MouseButton1Click:Connect(function()
+        guiEnabled = false
+        
+        -- Animasi close - SESUAIKAN UKURAN ANIMASI
+        local closeTween = TweenService:Create(
+            mainFrame,
+            TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+            {Size = UDim2.new(0, 10, 0, 10), Position = UDim2.new(0.5, -5, 0.5, -5)}
+        )
+        
+        closeTween:Play()
+        
+        -- Tunggu animasi selesai sebelum menghapus GUI
+        task.wait(0.3)
+        screenGui:Destroy()
+    end)
+    
+    -- Fungsi tombol duduk
+    sitButton.MouseButton1Click:Connect(function()
+        sitRandomSeat()
+    end)
+    
+    -- Efek hover pada tombol duduk
+    sitButton.MouseEnter:Connect(function()
+        local hoverTween = TweenService:Create(
+            sitButton,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = Color3.fromRGB(90, 140, 240)}
+        )
+        hoverTween:Play()
+    end)
+    
+    sitButton.MouseLeave:Connect(function()
+        local leaveTween = TweenService:Create(
+            sitButton,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = Color3.fromRGB(70, 120, 220)}
+        )
+        leaveTween:Play()
+    end)
+    
+    -- Auto-update jumlah kursi setiap 5 detik
+    spawn(function()
+        while guiEnabled and screenGui.Parent do
+            task.wait(5)
+            if guiEnabled and screenGui.Parent and not isMinimized then
+                local seats = findEmptySeats()
+                seatCountLabel.Text = "Detected Seat: " .. tostring(#seats)
+            end
+        end
+    end)
+end
+
+-- Inisialisasi GUI
+local success, errorMsg = pcall(createGUI)
+
+if not success then
+    warn("Gagal membuat GUI: " .. tostring(errorMsg))
+    -- Fallback ke fungsi dasar jika GUI gagal
+    task.wait(1)
+    local Seats = findEmptySeats()
+    if #Seats > 0 then
+        local randomSeat = Seats[math.random(1, #Seats)]
+        local success2 = pcall(function()
+            randomSeat:Sit(Humanoid)
+        end)
+        if not success2 then
+            warn("Gagal duduk di kursi dengan fungsi fallback")
+        end
+    else
+        warn("Tidak ada kursi kosong yang ditemukan")
+    end
+end
+
+-- Fungsi untuk handle karakter baru jika respawn
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    Humanoid = character:WaitForChild("Humanoid")
+end)
